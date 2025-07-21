@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 from typing import Tuple, Dict, Any
 
+
 import numpy as np
 import optuna
 import pandas as pd
@@ -164,7 +165,7 @@ def optimize_truncation(
     threads: int = 0,
     timeout: int | None = None,
     seed: int | None = None,
-) -> (Metadata, OptiTrimStudyDirFmt):
+) -> Tuple[Metadata, OptiTrimStudyDirFmt]:
     """Optuna で DADA2 トリミング長を探索し、推奨パラメータを返す。"""
 
     # reproducibility

@@ -6,12 +6,20 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from qiime2.plugin import Citations, Plugin, SemanticType, Str, Int, Float, Bool
-from q2_types.feature_table import FeatureTable, Frequency
-from q2_types.per_sample_sequences import SequencesWithQuality, PairedEndSequencesWithQuality, SampleData
+from qiime2.plugin import (
+    Citations, Plugin, SemanticType,
+    Choices, Range, Str, Int, Float, Metadata, Threads
+)
+from q2_types.sample_data import SampleData
+from q2_types.per_sample_sequences import (
+    SequencesWithQuality,
+    PairedEndSequencesWithQuality,
+)
+
+from q2_types.per_sample_sequences import SequencesWithQuality, PairedEndSequencesWithQuality
 from q2_optitrim import __version__
 from q2_optitrim._optimize import optimize_truncation
-from q2_optitrim.formats import OptiTrimStudyDirFmt
+from q2_optitrim.formats import OptiTrimStudyFormat, OptiTrimStudyDirFmt
 
 # SemanticType for study JSON (opaque)
 OptiTrimStudy = SemanticType('OptiTrimStudy')
@@ -31,7 +39,7 @@ plugin = Plugin(
     citations=[citations['Caporaso-Bolyen-2025']]
 )
 
-plugin.register_formats(OptiTrimStudyDirFmt)
+plugin.register_formats(OptiTrimStudyFormat, OptiTrimStudyDirFmt)
 plugin.register_semantic_types(OptiTrimStudy)
 plugin.register_semantic_type_to_format(
     OptiTrimStudy,
@@ -47,19 +55,19 @@ plugin.methods.register_function(
         'amplicon_length': Int,
         'fwd_primer_length': Int,
         'rev_primer_length': Int,
-        'fraction': Float % plugin.Range(0, 1, inclusive_start=False, inclusive_end=True),
-        'trials': Int % plugin.Range(1, None),
-        'direction': Str % plugin.Choices(['maximize', 'minimize']),
-        'min_trunc': Int % plugin.Range(0, None),
-        'max_trunc': Int % plugin.Range(1, None),
-        'step': Int % plugin.Range(1, None),
-        'min_overlap': Int % plugin.Range(0, None),
-        'threads': Int % plugin.Range(0, None),
-        'timeout': Int % plugin.Range(1, None) | plugin.Use.default(None),
-        'seed': Int | plugin.Use.default(None),
+        'fraction': Float % Range(0, 1, inclusive_start=False, inclusive_end=True),
+        'trials': Int % Range(1, None),
+        'direction': Str % Choices(['maximize', 'minimize']),
+        'min_trunc': Int % Range(0, None),
+        'max_trunc': Int % Range(1, None),
+        'step': Int % Range(1, None),
+        'min_overlap': Int % Range(0, None),
+        'threads': Threads,
+        'timeout': Int % Range(1, None),
+        'seed': Int % Range(0, None),
     },
     outputs=[
-        ('recommended_params', qiime2.plugin.Metadata),  # Metadata 出力
+        ('recommended_params', Metadata),
         ('study', OptiTrimStudy),
     ],
     input_descriptions={
