@@ -1,4 +1,3 @@
-# q2_optitrim/cli.py
 from __future__ import annotations
 import argparse
 import sys
@@ -49,7 +48,7 @@ def main(argv=None):
 
     md.save(args.o_params)
     qiime2.Artifact.import_data(
-        'OptiTrimStudy', dirfmt  # 仮 SemanticType -> plugin_setup で定義
+        'OptiTrimStudy', dirfmt
     ).save(args.o_study)
 
 if __name__ == "__main__":

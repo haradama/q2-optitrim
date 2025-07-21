@@ -9,8 +9,6 @@ A [QIIME 2](https://qiime2.org) community plugin for **automatic optimisation o
 
 > **Status**: Experimental. Early adopters and feedback welcome!  
 
----
-
 ## Installation
 
 The instructions below install the **latest development version** of *q2‑optitrim*.  
@@ -63,8 +61,6 @@ You should now see **`optitrim`** listed when you run:
 ```bash
 qiime info
 ```
-
----
 
 ## Quick start
 
@@ -127,13 +123,11 @@ All unit tests should pass with no failures (warnings are usually okay).
 Pull requests, bug reports and feature suggestions are warmly welcomed!
 Please open an issue first if you plan major work so we can discuss design.
 
----
-
 ## Citation
 
 If you use **q2‑optitrim** in a publication, please cite:
 
-```
+```plain
 Harada M. (2025) q2-optitrim: Optuna‑driven optimisation of DADA2 parameters. GitHub repository. https://github.com/haradama/q2-optitrim
 ```
 
