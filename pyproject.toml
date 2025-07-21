@@ -8,11 +8,24 @@ readme = {file = "README.md", content-type = "text/markdown"}
 license = {file = "LICENSE"}
 dynamic = ["version"]
 
+dependencies = [
+    "qiime2",
+    "optuna>=3.0",
+    "pandas",
+    "numpy",
+    "q2-dada2",
+    "q2-demux",
+    "q2-types",
+]
+
 [project.urls]
 Homepage = "https://github.com/haradama/q2-optitrim"
 
 [project.entry-points.'qiime2.plugins']
 "q2-optitrim" = "q2_optitrim.plugin_setup:plugin"
+
+[project.scripts]
+optitrim-search = "q2_optitrim.cli:main"
 
 [build-system]
 requires = [

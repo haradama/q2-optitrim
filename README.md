@@ -1,131 +1,150 @@
-# q2-optitrim
+# q2‑optitrim
 
-A [QIIME 2](https://qiime2.org) plugin [developed](https://develop.qiime2.org) by Masafumi Harada (harada@sfc.wide.ad.jp). 🔌
+A [QIIME 2](https://qiime2.org) community plugin for **automatic optimisation of DADA2 truncation parameters** using [Optuna](https://optuna.org) and a lightweight read subsampling strategy.
 
-## Installation instructions
+* **Single‑ and paired‑end** support  
+* Hyperparameter search on a **fraction of your data**
+* Outputs both a **recommended parameter table** and a **JSON summary** of the Optuna study  
+* Seamless integration with QIIME 2 command‑line workflows
 
-**The following instructions are intended to be a starting point** and should be replaced when `q2-optitrim` is ready to share with others.
-They will enable you to install the most recent *development* version of `q2-optitrim`.
-Remember that *release* versions should be used for all "real" work (i.e., where you're not testing or prototyping) - if there aren't instructions for installing a release version of this plugin, it is probably not yet intended for use in practice.
+> **Status**: Experimental. Early adopters and feedback welcome!  
 
-### Install Prerequisites
+---
 
-[Miniconda](https://conda.io/miniconda.html) provides the `conda` environment and package manager, and is currently the only supported way to install QIIME 2.
-Follow the instructions for downloading and installing Miniconda.
+## Installation
 
-After installing Miniconda and opening a new terminal, make sure you're running the latest version of `conda`:
+The instructions below install the **latest development version** of *q2‑optitrim*.  
+For production analyses you should use tagged release versions once they become available.
+
+### Prerequisites
+
+1. Install [Miniconda](https://conda.io/miniconda.html) if you haven’t already.  
+2. Update conda:
 
 ```bash
 conda update conda
 ```
 
-###  Install development version of `q2-optitrim`
+### Clone the repository
 
-Next, you need to get into the top-level `q2-optitrim` directory.
-If you already have this (e.g., because you just created the plugin), this may be as simple as running `cd q2-optitrim`.
-If not, you'll need the `q2-optitrim` directory on your computer.
-How you do that will differ based on how the package is shared, and ideally the developer will update these instructions to be more specific (remember, these instructions are intended to be a starting point).
-For example, if it's maintained in a GitHub repository, you can achieve this by [cloning the repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
-Once you have the directory on your computer, change (`cd`) into it.
-
-If you're in a conda environment, deactivate it by running `conda deactivate`.
-
-
-Then, follow the install instructions below, based on your machine's architecture:
-
-<details>
-<summary><strong>🍏&nbsp;Apple Silicon (ARM)</strong></summary>
-<p>&nbsp;</p>
-
-Start by creating a new conda environment:
-
-```shell
-CONDA_SUBDIR=osx-64 conda env create -n q2-optitrim-dev --file ./environment-files/q2-optitrim-qiime2-amplicon-dev.yml
+```bash
+git clone https://github.com/haradama/q2-optitrim.git
+cd q2-optitrim
 ```
 
-After this completes, activate the new environment you created by running:
+### Create and activate a fresh conda environment
 
-```shell
+```bash
+conda env create -n q2-optitrim-dev \
+  --file ./environment-files/q2-optitrim-qiime2-amplicon-dev.yml
+
 conda activate q2-optitrim-dev
 ```
 
-Once this new environment has been activated, update your conda config to set the subdir to osx-64:
-
-```shell
-conda config --env --set subdir osx-64
-```
-
-Finally, run:
-
-```shell
-make install
-```
 </details>
 
-<details>
-<summary><strong>🛠&nbsp;All other architectures (Apple Intel, Linux, WSL)</strong></summary>
-<p>&nbsp;</p>
+### 3. Install the plugin
 
-Start by creating a new conda environment:
-
-```shell
-conda env create -n q2-optitrim-dev --file ./environment-files/q2-optitrim-qiime2-amplicon-dev.yml
-```
-
-After this completes, activate the new environment you created by running:
-
-```shell
-conda activate q2-optitrim-dev
-```
-
-Finally, run:
-
-```shell
+```bash
 make install
 ```
-</details>
 
-## Testing and using the most recent development version of `q2-optitrim`
+> If you need the *stable* QIIME 2 distribution, swap the `-dev.yml` for
+> `q2-optitrim-qiime2-amplicon-release.yml`.
 
-After completing the install steps above, confirm that everything is working as expected by running:
+### 4. Refresh the QIIME 2 plugin cache
 
-```shell
-make test
-```
-
-You should get a report that tests were run, and you should see that all tests passed and none failed.
-It's usually ok if some warnings are reported.
-
-If all of the tests pass, you're ready to use the plugin.
-Start by making QIIME 2's command line interface aware of `q2-optitrim` by running:
-
-```shell
+```bash
 qiime dev refresh-cache
 ```
 
-You should then see the plugin in the list of available plugins if you run:
+You should now see **`optitrim`** listed when you run:
 
-```shell
+```bash
 qiime info
 ```
 
-You should be able to review the help text by running:
+---
 
-```shell
-qiime optitrim --help
+## Quick start
+
+### Optimising truncation lengths
+
+```bash
+qiime optitrim optimize-truncation \
+  --i-demux demux.qza \
+  --p-amplicon-length 250 \
+  --p-fwd-primer-length 20 \
+  --p-rev-primer-length 20 \
+  --p-fraction 0.20 \
+  --p-trials 30 \
+  --o-params recommended-params.qza \
+  --o-study optitrim-study.qza
 ```
 
-Have fun! 😎
+* `recommended-params.qza` – one‑row **Metadata** containing the optimal `trunc_len_*`, `trim_left_*`, etc.
+* `optitrim-study.qza` – a **JSON** file with the Optuna study summary (best score, trial history).
+
+#### Inspect the recommended parameters
+
+```bash
+qiime metadata tabulate \
+  --m-input-file recommended-params.qza \
+  --o-visualization recommended-params.qzv
+qiime tools view recommended-params.qzv
+```
+
+### Running DADA2 with the optimised values
+
+```bash
+# Example for paired-end data
+qiime dada2 denoise-paired \
+  --i-demultiplexed-seqs demux.qza \
+  --p-trunc-len-f 230 \
+  --p-trunc-len-r 200 \
+  --p-trim-left-f 20 \
+  --p-trim-left-r 20 \
+  --p-min-overlap 20 \
+  --o-table table.qza \
+  --o-representative-sequences rep-seqs.qza \
+  --o-denoising-stats stats.qza
+```
+
+Simply substitute the numbers with those found in `recommended-params.qza`.
+
+## Testing
+
+After installation, run:
+
+```bash
+make test
+```
+
+All unit tests should pass with no failures (warnings are usually okay).
+
+## Contributing
+
+Pull requests, bug reports and feature suggestions are warmly welcomed!
+Please open an issue first if you plan major work so we can discuss design.
+
+---
+
+## Citation
+
+If you use **q2‑optitrim** in a publication, please cite:
+
+```
+Harada M. (2025) q2-optitrim: Optuna‑driven optimisation of DADA2 parameters. GitHub repository. https://github.com/haradama/q2-optitrim
+```
+
+For QIIME 2 itself, see the [QIIME 2 citation guidelines](https://qiime2.org).
+
+## License
+
+This work is distributed under the terms of the *Modified BSD License*.
+See the [LICENSE](LICENSE) file for full text.
 
 ## About
 
-The `q2-optitrim` Python package was [created from a template](https://develop.qiime2.org/en/latest/plugins/tutorials/create-from-template.html).
-To learn more about `q2-optitrim`, refer to the [project website](https://github.com/haradama/q2-optitrim).
-To learn how to use QIIME 2, refer to the [QIIME 2 User Documentation](https://docs.qiime2.org).
-To learn QIIME 2 plugin development, refer to [*Developing with QIIME 2*](https://develop.qiime2.org).
-
-`q2-optitrim` is a QIIME 2 community plugin, meaning that it is not necessarily developed and maintained by the developers of QIIME 2.
-Please be aware that because community plugins are developed by the QIIME 2 developer community, and not necessarily the QIIME 2 developers themselves, some may not be actively maintained or compatible with current release versions of the QIIME 2 distributions.
-More information on development and support for community plugins can be found [here](https://library.qiime2.org).
-If you need help with a community plugin, first refer to the [project website](https://github.com/haradama/q2-optitrim).
-If that page doesn't provide information on how to get help, or you need additional help, head to the [Community Plugins category](https://forum.qiime2.org/c/community-contributions/community-plugins/14) on the QIIME 2 Forum where the QIIME 2 developers will do their best to help you.
+*q2‑optitrim* was created with the [QIIME 2 plugin template](https://develop.qiime2.org) and is **not** part of the core QIIME 2 distribution. Support is best‑effort via the [QIIME 2 Forum](https://forum.qiime2.org).
+Author: Masafumi Harada – Contributions welcome!
